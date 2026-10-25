@@ -1,0 +1,1560 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>RAIDER PSYCHO-PASS</title>
+  <meta name="description" content="Calcule le Psycho-Pass de ton Raider en temps réel. Indicateur communautaire expérimental pour ARC Raiders — pas un score Embark." />
+  <meta name="theme-color" content="#071016" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Outfit:wght@400;500;600;700&display=swap" />
+  <style>
+
+:root { color-scheme: dark; --canvas:#071016; --surface:#10202b; --raised:#163042; --line:#2a4658; --fg:#e7f4f6; --muted:#8eacb8; --cyan:#3ee0ff; --watch:#f0b429; --hot:#ff4d5e; }
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--canvas); color: var(--fg); font-family: "Outfit", "Segoe UI", sans-serif; }
+body { min-height: 100dvh; }
+button, summary { cursor: pointer; font: inherit; color: inherit; }
+button { min-height: 44px; }
+h1 { font-family: "Chakra Petch", "Segoe UI", sans-serif; font-size: clamp(2rem, 6vw, 3.2rem); line-height: 1.1; margin: 0.4rem 0; }
+h2 { font-family: "Chakra Petch", "Segoe UI", sans-serif; font-size: 1.25rem; margin: 1.4rem 0 0.4rem; }
+p { line-height: 1.5; }
+header { border-bottom: 1px solid var(--line); }
+.bar, main { width: min(64rem, calc(100% - 2rem)); margin: 0 auto; }
+.bar { display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; justify-content: space-between; padding: 1rem 0; }
+.brand { background: none; border: 0; text-align: left; padding: 0; }
+.brand small, .muted, small { color: var(--muted); }
+.kicker { font-family: "Chakra Petch", sans-serif; letter-spacing: 0.12em; text-transform: uppercase; color: var(--cyan); font-size: 0.75rem; margin: 0; }
+.lead { font-size: 1.15rem; }
+.notice, .card, .banner { border: 1px solid var(--line); border-radius: 0.9rem; padding: 1rem; background: var(--surface); }
+.card.accent { border-color: var(--cyan); }
+.banner.warn, .warn-text { color: var(--watch); }
+.advice { border-color: var(--watch); }
+.advice h2 { color: var(--watch); margin-top: 0; }
+main { padding: 1.5rem 0 3rem; }
+.split, .axes, .steps { display: grid; gap: 0.75rem; margin-top: 1rem; }
+@media (min-width: 800px) { .split, .axes { grid-template-columns: 1fr 1fr; } .axes { grid-template-columns: 1fr 1fr 1fr; } .steps { grid-template-columns: 1fr 1fr 1fr; } .layout { display: grid; grid-template-columns: 12rem 1fr; gap: 1.25rem; } }
+.steps { list-style: none; padding: 0; }
+.steps li, .nav { border: 1px solid var(--line); border-radius: 0.9rem; padding: 0.9rem; }
+.nav { list-style: none; display: flex; gap: 0.4rem; overflow-x: auto; margin: 0; padding: 0; }
+.nav li { margin: 0; }
+.nav button { background: transparent; border: 1px solid transparent; border-radius: 0.6rem; padding: 0.45rem 0.6rem; white-space: nowrap; }
+.nav button.on { border-color: var(--cyan); background: var(--surface); }
+.layout section { min-width: 0; }
+.strong { font-weight: 600; margin: 0.3rem 0; }
+.gauge-top, .row, .scale, .factors li { display: flex; justify-content: space-between; gap: 0.75rem; align-items: flex-end; }
+.score { font-family: "Chakra Petch", sans-serif; font-size: 3rem; line-height: 1; margin: 0; }
+.gauge.compact .score { font-size: 1.6rem; }
+.score.cyan, .fill.cyan, .num { color: var(--cyan); }
+.score.watch { color: var(--watch); }
+.score.hot { color: var(--hot); }
+.score.muted { color: var(--muted); }
+.fill.cyan { background: var(--cyan); }
+.fill.watch { background: var(--watch); }
+.fill.hot { background: var(--hot); }
+.fill.muted { background: var(--line); }
+.track { height: 0.5rem; background: var(--raised); border-radius: 999px; overflow: hidden; margin-top: 0.7rem; }
+.track.thin { height: 0.3rem; }
+.fill { height: 100%; }
+.scale { color: var(--muted); font-size: 0.75rem; margin-top: 0.35rem; }
+.num { font-family: "Chakra Petch", sans-serif; font-size: 1.4rem; margin: 0.2rem 0; }
+.options { display: grid; gap: 0.6rem; margin-top: 1rem; }
+.option { text-align: left; background: var(--canvas); border: 1px solid var(--line); border-radius: 0.9rem; padding: 0.8rem 1rem; }
+.option.on { border-color: var(--cyan); background: var(--surface); }
+.option small { display: block; color: var(--muted); margin-top: 0.25rem; }
+.actions { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-top: 1.2rem; }
+.actions button, button.primary { border-radius: 0.8rem; border: 1px solid var(--line); background: transparent; padding: 0.7rem 1rem; }
+button.primary { background: var(--cyan); color: var(--canvas); border-color: var(--cyan); font-weight: 700; }
+button.primary:disabled { opacity: 0.4; }
+button.ghost { border: 0; color: var(--muted); background: none; }
+.factors { list-style: none; padding: 0; margin: 0.4rem 0 0; }
+.factors b { color: var(--cyan); font-family: "Chakra Petch", sans-serif; }
+ul { padding-left: 1.1rem; }
+li { margin: 0.35rem 0; color: var(--muted); line-height: 1.45; }
+.links { list-style: none; padding: 0; }
+a { color: var(--cyan); }
+textarea { width: 100%; min-height: 16rem; margin-top: 0.6rem; background: var(--canvas); color: var(--fg); border: 1px solid var(--line); border-radius: 0.8rem; padding: 0.8rem; }
+.transparency { margin-top: 2rem; border-top: 1px solid var(--line); padding-top: 1rem; }
+.stack { display: grid; gap: 0.6rem; }
+summary { min-height: 44px; display: flex; align-items: center; }
+.small { font-size: 0.8rem; }
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+
+  </style>
+</head>
+<body id="top">
+  <div id="app"></div>
+  <script>
+/**
+ * RAIDER PSYCHO-PASS — module « profil général ».
+ *
+ * Indicateur communautaire expérimental, sur 300, inspiré de l'échelle
+ * Psycho-Pass. Ce N'EST PAS le score interne d'Embark et ce fichier ne
+ * contient aucun coefficient officiel : le studio n'en a pas publié.
+ *
+ * Formule (choix du modèle, pas une rétro-ingénierie) :
+ *
+ *   signal = moyenne pondérée des réponses d'initiation
+ *          mélangée au pic du geste le plus offensif
+ *          (un « je tire souvent le premier » ne disparaît pas
+ *          dans une moyenne de « jamais »).
+ *   Les tirs accidentels, seuls, sont atténués.
+ *   L'intensité (durée, downs, répétition) amplifie seulement ce signal,
+ *   en écho qualitatif à la note publique d'Embark : un échange long pèse
+ *   plus, pour celui qui a commencé.
+ *
+ *   score = signal × 300
+ *         + (1 − signal) × pression × 120
+ *
+ * La pression subie relève donc l'indice quand le Raider n'initie pas
+ * (conseil d'équipement), sans le faire passer pour l'agresseur.
+ * La défense (dégâts subis d'abord, fuite, escouade touchée en premier)
+ * ne s'ajoute pas au score. Micro, émotes, négociations et valeur du
+ * loadout non plus.
+ *
+ * Le module « dernière partie » branchera le même type Reading
+ * sans réécrire cette formule : voir ModuleId.
+ */
+const MODULES = [
+    {
+        id: "general",
+        index: "01",
+        title: "Profil général",
+        text: "Plusieurs parties récentes, un seul format. Lecture de tendance, pas le film d'un raid.",
+        ready: true,
+    },
+    {
+        id: "last-raid",
+        index: "02",
+        title: "Dernière partie",
+        text: "Chronologie d'un raid : premier tir, premier dégât, third-party, extraction. Prévu, pas encore branché.",
+        ready: false,
+    },
+];
+const SECTIONS = [
+    { id: "context", index: "01", title: "Contexte" },
+    { id: "encounters", index: "02", title: "Rencontres" },
+    { id: "initiation", index: "03", title: "Initiation" },
+    { id: "defense", index: "04", title: "Défense" },
+    { id: "comms", index: "05", title: "Contact" },
+    { id: "intensity", index: "06", title: "Intensité" },
+    { id: "extract", index: "07", title: "Extraction" },
+];
+const always = () => true;
+function someEncounters(a) {
+    return Boolean(a.encounterRate && a.encounterRate !== "none");
+}
+function noEncounters(a) {
+    return a.encounterRate === "none";
+}
+function combatPath(a) {
+    if (someEncounters(a))
+        return true;
+    return a.engagedAnyway === "isolated" || a.engagedAnyway === "hunted";
+}
+function squadFormat(a) {
+    return a.format === "duo" || a.format === "trio";
+}
+const SCALE_5 = [
+    { id: "never", label: "Jamais", v: 0 },
+    { id: "once", label: "Une fois", v: 0.2 },
+    { id: "sometimes", label: "Parfois", v: 0.48 },
+    { id: "often", label: "Souvent", v: 0.78 },
+    { id: "always", label: "Presque toujours", v: 1 },
+    { id: "unknown", label: "Je ne sais pas", detail: "Exclu du calcul. Baisse la confiance.", v: null },
+];
+const FREQ_4 = [
+    { id: "never", label: "Jamais", v: 0 },
+    { id: "rare", label: "Rarement", v: 0.28 },
+    { id: "sometimes", label: "Parfois", v: 0.55 },
+    { id: "often", label: "Souvent", v: 1 },
+];
+const QUESTIONS = [
+    {
+        id: "format",
+        sectionId: "context",
+        prompt: "Dans quel format veux-tu évaluer ce Raider ?",
+        note: "Un seul format à la fois. Depuis la mise à jour 1.36.0, Embark indique suivre le style séparément en solo, duo et trio. Ce terminal fait pareil : on ne mélange pas les historiques.",
+        axis: "meta",
+        weight: 0,
+        show: always,
+        options: [
+            { id: "solo", label: "Solo", detail: "Tu entres seul sur Topside.", v: 0 },
+            { id: "duo", label: "Duo", detail: "Deux Raiders, profil de ce format seulement.", v: 0 },
+            { id: "trio", label: "Trio", detail: "Escouade de trois, profil séparé du solo.", v: 0 },
+        ],
+    },
+    {
+        id: "recentGames",
+        sectionId: "context",
+        prompt: "Sur combien de parties récentes de ce format t'appuies-tu ?",
+        note: "Dix parties nettes ne valent pas deux souvenirs flous. Le nombre change la confiance, pas un malus caché sur le score.",
+        axis: "meta",
+        weight: 0,
+        show: always,
+        options: [
+            { id: "g1", label: "1 à 2 parties", v: 0.3 },
+            { id: "g2", label: "3 à 5 parties", v: 0.5 },
+            { id: "g3", label: "6 à 9 parties", v: 0.67 },
+            { id: "g4", label: "10 à 15 parties", v: 0.82 },
+            { id: "g5", label: "16 à 25 parties", v: 0.92 },
+            { id: "g6", label: "26 parties ou plus", v: 0.97 },
+        ],
+    },
+    {
+        id: "frequency",
+        sectionId: "context",
+        prompt: "À quel rythme joues-tu en ce moment ?",
+        note: "Contexte seulement. La fréquence ne modifie ni le score ni un soi-disant délai de récupération.",
+        axis: "narrative",
+        weight: 0,
+        show: always,
+        options: [
+            { id: "rare", label: "Quelques parties par mois", v: 0 },
+            { id: "weekly", label: "Une à deux fois par semaine", v: 0 },
+            { id: "regular", label: "Plusieurs fois par semaine", v: 0 },
+            { id: "daily", label: "Presque tous les jours", v: 0 },
+        ],
+    },
+    {
+        id: "sameFormat",
+        sectionId: "context",
+        prompt: "Ces parties sont-elles bien toutes dans ce format ?",
+        axis: "meta",
+        weight: 0,
+        show: always,
+        options: [
+            { id: "pure", label: "Oui, uniquement ce format", v: 1 },
+            { id: "mostly", label: "En majorité, avec quelques exceptions", v: 0.86 },
+            {
+                id: "mixed",
+                label: "J'ai mélangé solo, duo et trio",
+                detail: "La fiabilité baisse. Un format ne se déduit pas d'un autre.",
+                v: 0.58,
+            },
+        ],
+    },
+    {
+        id: "memory",
+        sectionId: "context",
+        prompt: "Quelle est la netteté de tes souvenirs sur ces parties ?",
+        axis: "meta",
+        weight: 0,
+        show: always,
+        options: [
+            { id: "vague", label: "Floue, je reconstitue", v: 0.58 },
+            { id: "clear", label: "Assez claire", v: 0.84 },
+            { id: "precise", label: "Très précise, je pourrais les raconter", v: 1 },
+        ],
+    },
+    {
+        id: "encounterRate",
+        sectionId: "encounters",
+        prompt: "Dans ces parties, à quelle fréquence as-tu croisé d'autres Raiders ?",
+        note: "Croiser quelqu'un n'est pas un combat. La suite distinguera le calme, le flou et l'hostile.",
+        axis: "narrative",
+        weight: 0,
+        show: always,
+        options: [
+            { id: "none", label: "Presque aucune rencontre", v: 0 },
+            { id: "rare", label: "Rares", detail: "Environ une partie sur quatre, ou moins.", v: 0.22 },
+            { id: "half", label: "Régulières", detail: "Environ une partie sur deux.", v: 0.48 },
+            { id: "most", label: "Fréquentes", detail: "La plupart des parties.", v: 0.74 },
+            { id: "every", label: "Quasi systématiques", v: 1 },
+        ],
+    },
+    {
+        id: "tone",
+        sectionId: "encounters",
+        prompt: "Comment qualifierais-tu l'ensemble de ces rencontres ?",
+        factor: "Tonalité des rencontres",
+        axis: "pressure",
+        weight: 1.35,
+        show: someEncounters,
+        options: [
+            { id: "peaceful", label: "Surtout pacifiques", v: 0.04 },
+            { id: "mixed", label: "Mélange calme et tendu", v: 0.32 },
+            { id: "ambiguous", label: "Souvent ambiguës", detail: "Visée, filature, sans tir clair.", v: 0.5 },
+            { id: "threatening", label: "Souvent menaçantes", v: 0.76 },
+            { id: "hostile", label: "Surtout hostiles", v: 1 },
+        ],
+    },
+    {
+        id: "shotsReceived",
+        sectionId: "encounters",
+        prompt: "À quelle fréquence as-tu reçu des tirs ?",
+        factor: "Tirs reçus",
+        axis: "pressure",
+        weight: 1.2,
+        show: someEncounters,
+        options: [
+            { id: "never", label: "Jamais", v: 0 },
+            { id: "rare", label: "Rarement", v: 0.22 },
+            { id: "sometimes", label: "Parfois", v: 0.48 },
+            { id: "often", label: "Souvent", v: 0.76 },
+            { id: "always", label: "Presque à chaque rencontre", v: 1 },
+        ],
+    },
+    {
+        id: "ambush",
+        sectionId: "encounters",
+        prompt: "Des embuscades ou des attaques au moment de l'extraction ?",
+        factor: "Embuscades à l'extraction",
+        axis: "pressure",
+        weight: 1.05,
+        show: someEncounters,
+        options: [
+            { id: "never", label: "Jamais", v: 0 },
+            { id: "once", label: "Une ou deux fois", v: 0.3 },
+            { id: "several", label: "Plusieurs fois", v: 0.66 },
+            { id: "frequent", label: "Fréquentes", v: 1 },
+        ],
+    },
+    {
+        id: "traps",
+        sectionId: "encounters",
+        prompt: "Des pièges ou des explosifs d'autres joueurs ont-ils été utilisés contre toi ?",
+        factor: "Pièges et explosifs subis",
+        axis: "pressure",
+        weight: 0.75,
+        show: someEncounters,
+        options: [
+            { id: "never", label: "Jamais", v: 0 },
+            { id: "rare", label: "Rarement", v: 0.28 },
+            { id: "several", label: "Plusieurs fois", v: 0.62 },
+            { id: "frequent", label: "Fréquemment", v: 1 },
+        ],
+    },
+    {
+        id: "trend",
+        sectionId: "encounters",
+        prompt: "Ces dernières parties, la tendance des lobbys te semble…",
+        factor: "Tendance récente",
+        axis: "pressure",
+        weight: 0.9,
+        show: someEncounters,
+        options: [
+            { id: "calmer", label: "Plus calme qu'avant", v: 0.05 },
+            { id: "stable", label: "Stable", v: 0.38 },
+            { id: "hotter", label: "Plus agressive", v: 0.92 },
+            { id: "unknown", label: "Trop peu de parties pour le dire", v: null },
+        ],
+    },
+    {
+        id: "engagedAnyway",
+        sectionId: "initiation",
+        prompt: "Même sans rencontre notable, as-tu engagé un Raider ?",
+        factor: "Engagement malgré peu de rencontres",
+        axis: "initiation",
+        weight: 1.15,
+        peak: true,
+        show: noEncounters,
+        options: [
+            { id: "no", label: "Non, aucun engagement", v: 0 },
+            { id: "isolated", label: "Un tir isolé, peut-être accidentel", v: 0.28 },
+            { id: "hunted", label: "Oui, j'ai cherché le contact", v: 0.92 },
+        ],
+    },
+    {
+        id: "firstShot",
+        sectionId: "initiation",
+        prompt: "À quelle fréquence as-tu tiré le premier ?",
+        note: "Le premier tir n'est pas le premier dégât. Un coup dans le vide, une sommation et le premier point de vie retiré sont trois événements distincts.",
+        factor: "Premier tir",
+        axis: "initiation",
+        weight: 1.25,
+        peak: true,
+        show: combatPath,
+        options: [...SCALE_5],
+    },
+    {
+        id: "firstDamage",
+        sectionId: "initiation",
+        prompt: "À quelle fréquence as-tu infligé le premier dégât réel ?",
+        note: "Points de vie effectivement retirés. Ce n'est pas « j'ai tiré le premier ».",
+        factor: "Premier dégât infligé",
+        axis: "initiation",
+        weight: 1.1,
+        peak: true,
+        show: combatPath,
+        options: [
+            { id: "never", label: "Jamais", v: 0 },
+            { id: "once", label: "Une fois", v: 0.2 },
+            { id: "sometimes", label: "Parfois", v: 0.48 },
+            { id: "often", label: "Souvent", v: 0.78 },
+            { id: "always", label: "Presque toujours", v: 1 },
+            { id: "unknown", label: "Chronologie inconnue", v: null },
+        ],
+    },
+    {
+        id: "thirdParty",
+        sectionId: "initiation",
+        prompt: "As-tu rejoint volontairement un combat déjà en cours ?",
+        note: "Lors du test public 1.39.0, Embark a indiqué que s'insérer dans un combat déjà commencé compte comme le démarrer. Pas un coefficient : un critère qualitatif.",
+        factor: "Third-party volontaire",
+        axis: "initiation",
+        weight: 1,
+        peak: true,
+        show: combatPath,
+        options: [
+            { id: "never", label: "Jamais", v: 0 },
+            { id: "rare", label: "Rarement", v: 0.28 },
+            { id: "sometimes", label: "Parfois", v: 0.55 },
+            { id: "often", label: "Souvent", v: 1 },
+            { id: "unknown", label: "Je ne suis pas sûr", v: null },
+        ],
+    },
+    {
+        id: "chase",
+        sectionId: "initiation",
+        prompt: "As-tu poursuivi un adversaire après qu'il a tenté de fuir ?",
+        factor: "Poursuite d'un fuyard",
+        axis: "initiation",
+        weight: 0.9,
+        peak: true,
+        show: combatPath,
+        options: [...FREQ_4],
+    },
+    {
+        id: "noProof",
+        sectionId: "initiation",
+        prompt: "As-tu tiré sur un Raider sans indice clair qu'il t'avait déjà attaqué ?",
+        factor: "Tir sans attaque préalable claire",
+        axis: "initiation",
+        weight: 1.15,
+        peak: true,
+        show: combatPath,
+        options: [
+            { id: "never", label: "Jamais", v: 0 },
+            { id: "rare", label: "Rarement", v: 0.28 },
+            { id: "sometimes", label: "Parfois", v: 0.55 },
+            { id: "often", label: "Souvent", v: 1 },
+            { id: "unknown", label: "Situation trop floue pour répondre", v: null },
+        ],
+    },
+    {
+        id: "accidental",
+        sectionId: "initiation",
+        prompt: "Des tirs accidentels ou des situations vraiment ambiguës ?",
+        note: "Ricochet, tir de panique, ARC confondu avec un Raider. Dans la note 1.39.0, un coup accidentel compte encore comme un début de combat, mais pèse beaucoup moins. Ici le poids est volontairement faible, et ce n'est pas leur formule.",
+        factor: "Tirs accidentels ou ambigus",
+        axis: "initiation",
+        weight: 0.3,
+        show: combatPath,
+        options: [
+            { id: "none", label: "Aucun", v: 0 },
+            { id: "one", label: "Un cas isolé", v: 0.15 },
+            { id: "several", label: "Plusieurs cas", v: 0.32 },
+            { id: "frequent", label: "C'était fréquent", v: 0.45 },
+            { id: "unknown", label: "Je ne peux pas les distinguer", v: null },
+        ],
+    },
+    {
+        id: "hitFirst",
+        sectionId: "defense",
+        prompt: "Avant de riposter, avais-tu déjà subi des dégâts ?",
+        note: "La riposte n'est pas additionnée à l'initiation. Elle décrit ta posture et peut ouvrir le verdict défensif.",
+        factor: "Dégâts subis avant la riposte",
+        axis: "defense",
+        weight: 1.2,
+        show: combatPath,
+        options: [
+            { id: "always", label: "Presque toujours, j'étais touché d'abord", v: 1 },
+            { id: "often", label: "Souvent", v: 0.75 },
+            { id: "sometimes", label: "Parfois", v: 0.45 },
+            { id: "rarely", label: "Rarement : j'engageais avant d'être touché", v: 0.12 },
+            { id: "nofight", label: "Pas de vrai échange de tirs", v: null },
+            { id: "unknown", label: "Chronologie inconnue", v: null },
+        ],
+    },
+    {
+        id: "surviveOnly",
+        sectionId: "defense",
+        prompt: "Quand tu as riposté, c'était pour survivre ?",
+        axis: "defense",
+        weight: 1,
+        show: combatPath,
+        options: [
+            { id: "always", label: "Oui, presque uniquement pour m'en sortir", v: 1 },
+            { id: "mostly", label: "Surtout oui", v: 0.72 },
+            { id: "pressed", label: "Parfois j'ai poussé l'avantage", v: 0.28 },
+            { id: "hunted", label: "Non, je cherchais le combat", v: 0 },
+        ],
+    },
+    {
+        id: "broke",
+        sectionId: "defense",
+        prompt: "As-tu fui ou rompu le contact quand c'était possible ?",
+        axis: "defense",
+        weight: 0.9,
+        show: combatPath,
+        options: [
+            { id: "often", label: "Souvent", v: 1 },
+            { id: "sometimes", label: "Parfois", v: 0.62 },
+            { id: "rarely", label: "Rarement", v: 0.22 },
+            { id: "never", label: "Je n'ai pas cherché à rompre", v: 0 },
+            { id: "nofight", label: "Pas de combat où fuir avait un sens", v: null },
+        ],
+    },
+    {
+        id: "pursuedAfter",
+        sectionId: "defense",
+        prompt: "Après avoir neutralisé la menace, as-tu poursuivi ?",
+        note: "Neutraliser puis courir après n'est plus de la défense. Cette réponse alimente l'initiation, pas la posture défensive.",
+        factor: "Poursuite après neutralisation",
+        axis: "initiation",
+        weight: 0.85,
+        peak: true,
+        show: combatPath,
+        options: [
+            { id: "never", label: "Jamais", v: 0 },
+            { id: "once", label: "Une fois", v: 0.32 },
+            { id: "sometimes", label: "Parfois", v: 0.62 },
+            { id: "often", label: "Souvent", v: 1 },
+            { id: "noneutral", label: "Pas de menace neutralisée", v: null },
+        ],
+    },
+    {
+        id: "overstay",
+        sectionId: "defense",
+        prompt: "As-tu continué le combat alors que tu pouvais partir ?",
+        factor: "Combat prolongé alors que la fuite était possible",
+        axis: "initiation",
+        weight: 0.75,
+        peak: true,
+        show: combatPath,
+        options: [
+            { id: "never", label: "Non", v: 0 },
+            { id: "sometimes", label: "Parfois", v: 0.55 },
+            { id: "often", label: "Souvent", v: 1 },
+            { id: "blocked", label: "Je ne pouvais pas vraiment partir", v: null },
+        ],
+    },
+    {
+        id: "squadFirst",
+        sectionId: "defense",
+        prompt: "Ton escouade a-t-elle été touchée en premier ?",
+        note: "Lors du test 1.39.0, Embark lisait toute l'escouade comme défensive si l'autre infligeait le premier dégât, down ou KO à n'importe quel membre. Ici ça nourrit le portrait défensif, pas un malus d'initiation.",
+        axis: "defense",
+        weight: 1.1,
+        show: (a) => combatPath(a) && squadFormat(a),
+        options: [
+            { id: "us", label: "Oui, souvent l'un des nôtres a été touché d'abord", v: 1 },
+            { id: "mixed", label: "Mitigé", v: 0.4 },
+            { id: "we", label: "C'est plutôt nous qui avons engagé", v: 0.05 },
+            { id: "unknown", label: "Je ne sais pas", v: null },
+        ],
+    },
+    {
+        id: "mic",
+        sectionId: "comms",
+        prompt: "Tu utilises le micro avec les inconnus ?",
+        note: "Portrait de style. Aucun bonus de matchmaking lié au micro n'est public, et ce terminal n'en invente pas.",
+        axis: "narrative",
+        weight: 0,
+        show: always,
+        options: [
+            { id: "off", label: "Non, micro coupé", v: 0 },
+            { id: "sometimes", label: "Parfois", v: 0 },
+            { id: "often", label: "Souvent", v: 0 },
+        ],
+    },
+    {
+        id: "greet",
+        sectionId: "comms",
+        prompt: "Salutations et tentatives de négociation ?",
+        axis: "narrative",
+        weight: 0,
+        show: always,
+        options: [
+            { id: "often", label: "Souvent", v: 0 },
+            { id: "sometimes", label: "Parfois", v: 0 },
+            { id: "rarely", label: "Rarement", v: 0 },
+            { id: "never", label: "Jamais", v: 0 },
+        ],
+    },
+    {
+        id: "emote",
+        sectionId: "comms",
+        prompt: "La roue d'émotes, tu t'en sers face aux autres Raiders ?",
+        axis: "narrative",
+        weight: 0,
+        show: always,
+        options: [
+            { id: "often", label: "Souvent", v: 0 },
+            { id: "sometimes", label: "Parfois", v: 0 },
+            { id: "rarely", label: "Rarement", v: 0 },
+            { id: "never", label: "Jamais", v: 0 },
+        ],
+    },
+    {
+        id: "deesc",
+        sectionId: "comms",
+        prompt: "Tu as tenté de désescalader ?",
+        axis: "narrative",
+        weight: 0,
+        show: always,
+        options: [
+            { id: "often", label: "Souvent", v: 0 },
+            { id: "sometimes", label: "Parfois", v: 0 },
+            { id: "rarely", label: "Rarement", v: 0 },
+            { id: "never", label: "Jamais", v: 0 },
+        ],
+    },
+    {
+        id: "shareExtract",
+        sectionId: "comms",
+        prompt: "Partage ou tolérance à l'extraction avec des inconnus ?",
+        note: "Décrire un style n'est pas affirmer qu'Embark récompense l'extraction pacifique. Rien de public ne le dit.",
+        axis: "narrative",
+        weight: 0,
+        show: someEncounters,
+        options: [
+            { id: "often", label: "Souvent tolérée ou partagée", v: 0 },
+            { id: "sometimes", label: "Parfois", v: 0 },
+            { id: "rarely", label: "Rarement", v: 0 },
+            { id: "never", label: "Jamais", v: 0 },
+            { id: "none", label: "L'occasion ne s'est pas présentée", v: 0 },
+        ],
+    },
+    {
+        id: "reactPeace",
+        sectionId: "comms",
+        prompt: "Face à un Raider qui a l'air pacifique, tu fais quoi ?",
+        factor: "Réaction aux Raiders pacifiques",
+        axis: "initiation",
+        weight: 0.95,
+        peak: true,
+        show: someEncounters,
+        options: [
+            { id: "leave", label: "Je le laisse", v: 0 },
+            { id: "greet", label: "Je salue et je passe", v: 0.05 },
+            { id: "watch", label: "Je le garde en joue, prêt", v: 0.28 },
+            { id: "shoot", label: "Je tire quand même", v: 1 },
+        ],
+    },
+    {
+        id: "reactAim",
+        sectionId: "comms",
+        prompt: "Quelqu'un te vise sans tirer. Ta réaction ?",
+        factor: "Réaction à une visée sans tir",
+        axis: "initiation",
+        weight: 0.9,
+        peak: true,
+        show: someEncounters,
+        options: [
+            { id: "hold", label: "Je ne tire pas", v: 0 },
+            { id: "move", label: "Je me repositionne ou je pars", v: 0.12 },
+            { id: "warn", label: "Je préviens, sans tirer le premier", v: 0.18 },
+            { id: "shoot", label: "Je tire le premier", v: 0.9 },
+        ],
+    },
+    {
+        id: "duration",
+        sectionId: "intensity",
+        prompt: "Quand il y a eu combat, il a plutôt duré…",
+        note: "L'intensité augmente le poids des combats que tu inities. Elle ne transforme pas une riposte en agression.",
+        axis: "intensity",
+        weight: 1.1,
+        show: combatPath,
+        options: [
+            { id: "none", label: "Pas de vrai combat", v: 0 },
+            { id: "short", label: "Très court, un échange bref", v: 0.2 },
+            { id: "mid", label: "Quelques secondes appuyées", v: 0.55 },
+            { id: "long", label: "Un affrontement prolongé", v: 1 },
+        ],
+    },
+    {
+        id: "involved",
+        sectionId: "intensity",
+        prompt: "Combien de joueurs se retrouvaient en général dans l'échange ?",
+        axis: "intensity",
+        weight: 0.7,
+        show: combatPath,
+        options: [
+            { id: "none", label: "Personne, pas d'échange", v: 0 },
+            { id: "one", label: "Un face-à-face", v: 0.35 },
+            { id: "several", label: "Plusieurs Raiders", v: 0.7 },
+            { id: "chaos", label: "Escouades, troisième force, confusion", v: 1 },
+        ],
+    },
+    {
+        id: "damageAmt",
+        sectionId: "intensity",
+        prompt: "La quantité de dégâts échangés, si tu la connais ?",
+        axis: "intensity",
+        weight: 0.8,
+        show: combatPath,
+        options: [
+            { id: "unknown", label: "Je ne sais pas", v: null },
+            { id: "light", label: "Légère", v: 0.25 },
+            { id: "mid", label: "Modérée", v: 0.6 },
+            { id: "heavy", label: "Lourde", v: 1 },
+        ],
+    },
+    {
+        id: "downs",
+        sectionId: "intensity",
+        prompt: "Des mises à terre pendant ces affrontements ?",
+        axis: "intensity",
+        weight: 1,
+        show: combatPath,
+        options: [
+            { id: "none", label: "Aucune", v: 0 },
+            { id: "rare", label: "Rares", v: 0.32 },
+            { id: "several", label: "Plusieurs", v: 0.68 },
+            { id: "many", label: "Nombreuses", v: 1 },
+        ],
+    },
+    {
+        id: "pursuitCount",
+        sectionId: "intensity",
+        prompt: "Des courses-poursuites, au-delà du simple échange de tirs ?",
+        axis: "intensity",
+        weight: 0.75,
+        show: combatPath,
+        options: [
+            { id: "none", label: "Aucune", v: 0 },
+            { id: "rare", label: "Rares", v: 0.4 },
+            { id: "several", label: "Plusieurs", v: 1 },
+        ],
+    },
+    {
+        id: "repeats",
+        sectionId: "intensity",
+        prompt: "Le même raid recommençait-il le combat plus d'une fois ?",
+        axis: "intensity",
+        weight: 1,
+        show: combatPath,
+        options: [
+            { id: "never", label: "Non", v: 0 },
+            { id: "sometimes", label: "Parfois", v: 0.5 },
+            { id: "often", label: "Souvent", v: 1 },
+        ],
+    },
+    {
+        id: "extractResult",
+        sectionId: "extract",
+        prompt: "Tes extractions, sur cet échantillon ?",
+        note: "Réussir ou rater l'extraction ne monte pas le Psycho-Pass : un échec peut venir des ARC. Seule la contestation par d'autres Raiders compte comme pression.",
+        axis: "narrative",
+        weight: 0,
+        show: always,
+        options: [
+            { id: "calm", label: "Surtout réussies et calmes", v: 0 },
+            { id: "contested", label: "Surtout réussies, mais contestées", v: 0 },
+            { id: "mixed", label: "Mitigé", v: 0 },
+            { id: "failed", label: "Souvent ratées", v: 0 },
+        ],
+    },
+    {
+        id: "extractContest",
+        sectionId: "extract",
+        prompt: "L'extraction elle-même était-elle contestée par d'autres Raiders ?",
+        factor: "Extraction contestée",
+        axis: "pressure",
+        weight: 0.8,
+        show: always,
+        options: [
+            { id: "rare", label: "Rarement ou jamais", v: 0.08 },
+            { id: "sometimes", label: "Parfois", v: 0.48 },
+            { id: "often", label: "Souvent", v: 0.9 },
+        ],
+    },
+    {
+        id: "elevator",
+        sectionId: "extract",
+        prompt: "Des rencontres hostiles près de l'ascenseur ?",
+        factor: "Hostilité près de l'ascenseur",
+        axis: "pressure",
+        weight: 1,
+        show: always,
+        options: [
+            { id: "never", label: "Jamais", v: 0 },
+            { id: "rare", label: "Rares", v: 0.28 },
+            { id: "several", label: "Plusieurs", v: 0.66 },
+            { id: "frequent", label: "Fréquentes", v: 1 },
+        ],
+    },
+    {
+        id: "kit",
+        sectionId: "extract",
+        prompt: "Quel équipement envisages-tu pour le prochain raid dans ce format ?",
+        note: "N'entre pas dans le score. Embark a écrit que le loadout ne pilote pas le matchmaking. Ça ne sert qu'à personnaliser le conseil.",
+        axis: "gear",
+        weight: 0,
+        show: always,
+        options: [
+            { id: "cheap", label: "Léger, remplaçable", v: 0 },
+            { id: "standard", label: "Standard, celui d'habitude", v: 0 },
+            { id: "expensive", label: "Coûteux", v: 0 },
+            { id: "rare", label: "Avec des objets rares que je veux préserver", v: 0 },
+        ],
+    },
+    {
+        id: "tolerance",
+        sectionId: "extract",
+        prompt: "Si tu perds cet équipement, qu'est-ce que ça représente ?",
+        axis: "gear",
+        weight: 0,
+        show: always,
+        options: [
+            { id: "fine", label: "Je peux le reperdre", v: 0 },
+            { id: "annoying", label: "Agacant, mais remplaçable", v: 0 },
+            { id: "painful", label: "Douloureux", v: 0 },
+            { id: "refuse", label: "Je refuse de risquer ces objets", v: 0 },
+        ],
+    },
+];
+const FORMULA = {
+    INIT_SCALE: 300,
+    PRESSURE_LIFT: 120,
+    INTENSITY_AMP: 0.28,
+    PEAK_BLEND: 0.42,
+    SOFT_ONLY_DAMP: 0.5,
+};
+const SAMPLE = {
+    g1: 0.3,
+    g2: 0.5,
+    g3: 0.67,
+    g4: 0.82,
+    g5: 0.92,
+    g6: 0.97,
+};
+const NOT_SCORED = [
+    "Micro, émotes, salutations, négociations et extraction partagée : portrait, pas un bonus.",
+    "Valeur de l'équipement et peur de le perdre : conseil de sortie seulement. Le loadout ne pilote pas le matchmaking, dixit Embark.",
+    "Réussite ou échec brut de l'extraction : hors calcul, un wipe peut venir des ARC.",
+    "Riposte après dégâts subis, fuite, escouade touchée en premier : posture défensive, pas une initiation.",
+];
+function questionById(id) {
+    return QUESTIONS.find((q) => q.id === id);
+}
+function chosenOption(id, answers) {
+    const q = questionById(id);
+    const picked = answers[id];
+    if (!q || !picked)
+        return undefined;
+    return q.options.find((o) => o.id === picked);
+}
+function visibleQuestions(answers) {
+    return QUESTIONS.filter((q) => q.show(answers));
+}
+function weightedMean(items) {
+    let w = 0;
+    let s = 0;
+    for (const it of items) {
+        w += it.w;
+        s += it.w * it.v;
+    }
+    if (w <= 0)
+        return null;
+    return s / w;
+}
+function itemsFor(axis, answers) {
+    const out = [];
+    for (const q of QUESTIONS) {
+        if (q.axis !== axis || !q.show(answers) || q.weight <= 0)
+            continue;
+        const opt = chosenOption(q.id, answers);
+        if (!opt || opt.v == null)
+            continue;
+        out.push({
+            id: q.id,
+            label: q.factor ?? q.prompt,
+            w: q.weight,
+            v: opt.v,
+            hard: Boolean(q.peak),
+        });
+    }
+    return out;
+}
+function clamp(n, min, max) {
+    return Math.min(max, Math.max(min, n));
+}
+function categoryFor(score) {
+    if (score >= 300) {
+        return {
+            id: "pvp",
+            name: "Raider PvP",
+            blurb: "Sommet symbolique de l'échelle : un profil extrêmement orienté PvP d'après tes réponses. Pas un classement officiel.",
+        };
+    }
+    if (score >= 230) {
+        return {
+            id: "very",
+            name: "Raider en lobbys très PvP",
+            blurb: "L'échantillon décrit une forte orientation combat, ou une pression qui ne laisse plus beaucoup de calme.",
+        };
+    }
+    if (score >= 180) {
+        return {
+            id: "near",
+            name: "Raider proche des lobbys PvP",
+            blurb: "Le combat joueur pèse lourd dans ce que tu décris. La similitude de style rend ce genre de lobby plus probable, sans le garantir.",
+        };
+    }
+    if (score >= 130) {
+        return {
+            id: "watch",
+            name: "Raider en vigilance",
+            blurb: "Zone mixte. Assez de friction pour sortir prudent, pas assez pour coller une étiquette unique.",
+        };
+    }
+    if (score >= 80) {
+        return {
+            id: "defend",
+            name: "Raider qui se défend",
+            blurb: "L'indice monte surtout parce que les rencontres chauffent, ou parce qu'un geste offensif ponctuel existe déjà.",
+        };
+    }
+    if (score >= 35) {
+        return {
+            id: "coop",
+            name: "Raider coopératif",
+            blurb: "Tu décris un style plutôt ouvert, avec assez de contact pour ne pas parler d'une carte vide.",
+        };
+    }
+    return {
+        id: "clear",
+        name: "Raider sans problèmes",
+        blurb: "Peu d'initiation, peu de pression rapportée. Ça ne promet pas un lobby sans danger.",
+    };
+}
+function formatLabel(answers) {
+    if (answers.format === "duo")
+        return "Duo";
+    if (answers.format === "trio")
+        return "Trio";
+    if (answers.format === "solo")
+        return "Solo";
+    return "Format non précisé";
+}
+function gamesLabel(answers) {
+    return chosenOption("recentGames", answers)?.label ?? "échantillon non précisé";
+}
+function confidenceOf(answers, visible) {
+    const sample = SAMPLE[answers.recentGames] ?? 0.45;
+    const memory = chosenOption("memory", answers)?.v ?? 0.7;
+    const purity = chosenOption("sameFormat", answers)?.v ?? 0.8;
+    const unknownLabels = [];
+    let unknownN = 0;
+    let knownN = 0;
+    for (const q of visible) {
+        if (q.axis !== "initiation" && q.axis !== "pressure" && q.axis !== "defense" && q.axis !== "intensity") {
+            continue;
+        }
+        const opt = chosenOption(q.id, answers);
+        if (!opt)
+            continue;
+        if (opt.v == null) {
+            unknownN += 1;
+            unknownLabels.push(q.factor ?? q.prompt);
+        }
+        else {
+            knownN += 1;
+        }
+    }
+    const ratio = unknownN / Math.max(1, unknownN + knownN);
+    const chrono = 1 - 0.5 * ratio;
+    let value = clamp(sample * (memory ?? 0.7) * (purity ?? 0.8) * chrono, 0.08, 0.98);
+    const answered = visible.filter((q) => answers[q.id]).length;
+    if (answered < 8)
+        value = Math.min(value, 0.42);
+    const label = value < 0.4 ? "faible" : value < 0.62 ? "moyenne" : value < 0.82 ? "élevée" : "très élevée";
+    return { value, label, unknownLabels };
+}
+function gearAdvice(input) {
+    const { score, confidence, heat, agg, defenderVerdict, trendId, answers } = input;
+    const kit = answers.kit;
+    const tolerance = answers.tolerance;
+    const lines = [];
+    const risky = kit === "rare" || kit === "expensive" || tolerance === "painful" || tolerance === "refuse";
+    if (confidence < 0.48 && score >= 130) {
+        lines.push("Ton indice est élevé, mais les données sont insuffisantes pour conclure à une tendance durable. Continue à observer les prochaines parties.");
+    }
+    else if (defenderVerdict && heat >= 0.55) {
+        lines.push("Ton Raider semble avoir subi plusieurs rencontres hostiles. Privilégie un équipement standard pendant quelques parties et réévalue la situation.");
+        lines.push("Ton Raider s'est surtout défendu. Rien ne permet de conclure qu'il a volontairement initié les combats.");
+    }
+    else if (defenderVerdict) {
+        lines.push("Ton Raider s'est surtout défendu. Rien ne permet de conclure qu'il a volontairement initié les combats.");
+        lines.push("Tu peux envisager ton équipement habituel, tout en gardant à l'esprit qu'aucun score ne garantit un lobby PvE.");
+    }
+    else if (score >= 180 || heat >= 0.72) {
+        lines.push("Ton historique récent indique une forte pression PvP. Sors avec un équipement remplaçable et conserve tes objets rares si leur perte serait difficile à accepter.");
+    }
+    else if (score < 35 && heat < 0.35) {
+        lines.push("Ton Raider semble évoluer dans un contexte calme. Tu peux envisager ton équipement habituel, tout en gardant à l'esprit qu'aucun score ne garantit un lobby PvE.");
+    }
+    else if (trendId === "hotter") {
+        lines.push("La tendance que tu décris est plus agressive. Le temps d'y voir plus clair, évite les objets dont la perte serait dure à accepter.");
+    }
+    else if (risky && score >= 100) {
+        lines.push("L'indice n'est pas extrême, mais tu envisages du matériel que tu tiens à garder. Une alternative remplaçable est plus raisonnable tant que la lecture n'est pas plus stable.");
+    }
+    else {
+        lines.push("Profil intermédiaire sur ce format. L'équipement standard reste le compromis le plus sain : de quoi te défendre, sans miser ce que tu ne veux pas perdre.");
+    }
+    if (trendId === "calmer" && agg < 0.25 && confidence >= 0.6 && score < 130) {
+        lines.push("La tendance récente te semble plus calme. Tu peux envisager un peu plus de risque, sans prendre cela pour un retour garanti à des lobbys pacifiques.");
+    }
+    if (risky && score < 80 && heat < 0.45 && !lines.some((l) => l.includes("objets rares"))) {
+        lines.push("Tu tiens à cet équipement. Même une lecture basse n'est pas une assurance : garde une alternative si la partie compte vraiment.");
+    }
+    if ((kit === "cheap" || tolerance === "fine") && (score >= 180 || heat >= 0.72)) {
+        lines.push("Tu envisages déjà du matériel que tu acceptes de perdre : c'est cohérent avec cette lecture.");
+    }
+    return lines.join(" ");
+}
+function synthesisOf(input) {
+    const { answers, defenderVerdict, defenderUncertain, agg, heat, confidence, trendId } = input;
+    const parts = [];
+    parts.push(`Lecture limitée au ${formatLabel(answers).toLowerCase()}, sur ${gamesLabel(answers).toLowerCase()}.`);
+    if (defenderVerdict) {
+        parts.push("Tu décris des attaques subies et peu ou pas d'initiation. Le verdict contextuel s'applique : Raider en lobby PvE s'étant défendu. La riposte n'est pas comptée comme une mise en chasse.");
+        if (heat >= 0.6) {
+            parts.push("La pression hostile observée reste élevée. Ce verdict parle de ton comportement, pas d'un lobby garanti sans danger.");
+        }
+    }
+    else if (defenderUncertain) {
+        parts.push("Tu décris surtout des attaques subies, mais la chronologie est trop incomplète pour affirmer que tu n'as rien initié.");
+    }
+    else if (agg >= 0.66) {
+        parts.push("Tes réponses décrivent un Raider qui engage souvent : premier tir, premier dégât, poursuite ou third-party. C'est surtout ça qui tire l'indice.");
+    }
+    else if (agg >= 0.35) {
+        parts.push("Le profil est mixte : une part des contacts vient de toi, une autre des situations subies.");
+    }
+    else if (heat >= 0.55) {
+        parts.push("Tu inities peu, mais les rencontres récentes sont souvent hostiles. L'indice monte à cause de la pression observée, pas pour te traiter comme l'agresseur.");
+    }
+    else {
+        parts.push("Les rencontres décrites restent plutôt calmes, et tu engages peu le combat.");
+    }
+    if (trendId === "hotter")
+        parts.push("Tu signales en plus une tendance récente plus agressive.");
+    if (trendId === "calmer")
+        parts.push("Tu signales une tendance récente plus calme.");
+    const greet = answers.greet;
+    const deesc = answers.deesc;
+    if (greet === "often" || deesc === "often") {
+        parts.push("Côté contact, tu décris des tentatives de salut ou de désescalade. Ça éclaire le style, ça ne baisse pas un score Embark.");
+    }
+    if (answers.reactPeace === "shoot") {
+        parts.push("Tirer sur un Raider qui semble pacifique est traité comme une initiation, pas comme un détail social.");
+    }
+    if (confidence < 0.48) {
+        parts.push("La confiance est limitée : échantillon court, souvenirs flous, formats mélangés ou chronologie inconnue. Ne lis pas cet indice comme une tendance installée.");
+    }
+    return parts.join(" ");
+}
+function evaluate(answers) {
+    const visible = visibleQuestions(answers);
+    const complete = visible.every((q) => Boolean(answers[q.id]));
+    const unlocked = Boolean(answers.format && answers.recentGames && answers.encounterRate);
+    const initItems = itemsFor("initiation", answers);
+    const pressItems = itemsFor("pressure", answers);
+    const defItems = itemsFor("defense", answers);
+    const intItems = itemsFor("intensity", answers);
+    const mean = weightedMean(initItems);
+    const hard = initItems.filter((i) => i.hard);
+    const peak = hard.length ? Math.max(...hard.map((i) => i.v)) : 0;
+    let signal = mean == null ? 0 : mean * (1 - FORMULA.PEAK_BLEND) + peak * FORMULA.PEAK_BLEND;
+    if (initItems.length > 0 && hard.length === 0)
+        signal *= FORMULA.SOFT_ONLY_DAMP;
+    const intensity = weightedMean(intItems);
+    const agg = clamp(signal * (1 + FORMULA.INTENSITY_AMP * (intensity ?? 0)), 0, 1);
+    const heat = weightedMean(pressItems) ?? 0;
+    const defenseMean = weightedMean(defItems);
+    const raw = agg * FORMULA.INIT_SCALE + (1 - agg) * heat * FORMULA.PRESSURE_LIFT;
+    const score = clamp(Math.round(raw), 0, 300);
+    const escIds = ["thirdParty", "chase", "noProof", "pursuedAfter", "overstay", "reactPeace", "reactAim", "engagedAnyway"];
+    const escItems = initItems.filter((i) => escIds.includes(i.id));
+    const escMean = weightedMean(escItems);
+    const escPeak = escItems.length ? Math.max(...escItems.map((i) => i.v)) : 0;
+    const escLow = (escMean == null || escMean <= 0.28) && escPeak <= 0.35;
+    const initLow = mean != null && signal <= 0.18;
+    const shots = chosenOption("shotsReceived", answers)?.v;
+    const ambush = chosenOption("ambush", answers)?.v;
+    const tone = chosenOption("tone", answers)?.v;
+    const hit = chosenOption("hitFirst", answers)?.v;
+    const squad = chosenOption("squadFirst", answers)?.v;
+    const attacked = (shots != null && shots >= 0.22) ||
+        (ambush != null && ambush >= 0.3) ||
+        (tone != null && tone >= 0.5) ||
+        (hit != null && hit >= 0.75) ||
+        (squad != null && squad >= 0.75);
+    const survive = chosenOption("surviveOnly", answers);
+    const notSeeking = !survive || survive.v == null || survive.v >= 0.6;
+    const aggressiveSocial = answers.reactPeace === "shoot" || answers.reactAim === "shoot";
+    const chronoIds = ["firstShot", "firstDamage", "hitFirst"];
+    const chronoUnknown = chronoIds.some((id) => {
+        const opt = chosenOption(id, answers);
+        return Boolean(opt && opt.v == null && opt.id === "unknown");
+    });
+    const onCombat = combatPath(answers);
+    const defenderVerdict = Boolean(onCombat && attacked && initLow && escLow && notSeeking && !chronoUnknown && !aggressiveSocial && complete);
+    const defenderUncertain = Boolean(onCombat && attacked && initLow && chronoUnknown && !aggressiveSocial);
+    const conf = confidenceOf(answers, visible);
+    const spread = Math.round((1 - conf.value) * 58);
+    const trendId = answers.trend ?? null;
+    const factorsRaw = [];
+    const initW = initItems.reduce((s, i) => s + i.w, 0);
+    const pressW = pressItems.reduce((s, i) => s + i.w, 0);
+    const amp = 1 + FORMULA.INTENSITY_AMP * (intensity ?? 0);
+    for (const it of initItems) {
+        factorsRaw.push({
+            label: it.label,
+            points: initW > 0 ? (it.w / initW) * it.v * amp * FORMULA.INIT_SCALE : 0,
+        });
+    }
+    for (const it of pressItems) {
+        factorsRaw.push({
+            label: it.label,
+            points: pressW > 0 ? (it.w / pressW) * it.v * (1 - agg) * FORMULA.PRESSURE_LIFT : 0,
+        });
+    }
+    const sumPts = factorsRaw.reduce((s, f) => s + f.points, 0);
+    const scale = sumPts > 0 ? score / sumPts : 1;
+    const factors = factorsRaw
+        .map((f) => ({ label: f.label, points: Math.round(f.points * scale) }))
+        .filter((f) => f.points > 0)
+        .sort((a, b) => b.points - a.points)
+        .slice(0, 5);
+    const uncertainties = [
+        "Ce Psycho-Pass n'est pas le score interne d'Embark. Aucun seuil officiel n'a été publié, et la similarité de style n'est jamais garantie.",
+    ];
+    if ((SAMPLE[answers.recentGames] ?? 1) < 0.5) {
+        uncertainties.push("Très peu de parties : une série courte peut être un hasard, pas une tendance.");
+    }
+    if (answers.memory === "vague") {
+        uncertainties.push("Souvenirs flous : la chronologie fine (qui a tiré, qui a blessé) est la première chose à perdre.");
+    }
+    if (answers.sameFormat === "mixed") {
+        uncertainties.push("Historiques de solo, duo et trio mélangés. Embark les sépare ; cette lecture est moins fiable.");
+    }
+    else if (answers.sameFormat === "mostly") {
+        uncertainties.push("Quelques parties d'un autre format se sont glissées dans l'échantillon.");
+    }
+    for (const label of conf.unknownLabels) {
+        uncertainties.push(`Réponse exclue faute de certitude : ${label}.`);
+    }
+    if (answers.damageAmt === "unknown") {
+        uncertainties.push("Volume de dégâts inconnu : l'intensité du combat reste approximative.");
+    }
+    if (defenderUncertain) {
+        uncertainties.push("Verdict défensif retenu : tu sembles avoir subi, mais l'ordre des coups n'est pas établi.");
+    }
+    uncertainties.push("Le test 1.39.0 (défense à poids nul) a été annoncé comme un test. On s'en inspire, on ne le fige pas comme une règle éternelle.");
+    uncertainties.push("Le toggle PvE testé du 13 au 20 octobre 2026 ne doit pas être mélangé à cet échantillon : Embark indiquait qu'il ne modifiait pas le rating PvPvE, et qu'il serait retiré à la fin du test.");
+    const readingBase = {
+        score: unlocked ? score : 0,
+        category: categoryFor(unlocked ? score : 0),
+        provisional: !complete,
+        unlocked,
+        initiation: Math.round(agg * 100),
+        pressure: Math.round(heat * 100),
+        defense: defenseMean == null ? null : Math.round(defenseMean * 100),
+        agg,
+        heat,
+        confidence: conf.value,
+        confidenceLabel: conf.label,
+        spread,
+        low: clamp((unlocked ? score : 0) - spread, 0, 300),
+        high: clamp((unlocked ? score : 0) + spread, 0, 300),
+        defenderVerdict: defenderVerdict && unlocked,
+        defenderUncertain: defenderUncertain && unlocked,
+        formatLabel: formatLabel(answers),
+        gamesLabel: gamesLabel(answers),
+        trendId,
+        factors,
+        uncertainties,
+        ignored: NOT_SCORED,
+        complete,
+    };
+    const synthesis = synthesisOf({
+        answers,
+        defenderVerdict: readingBase.defenderVerdict,
+        defenderUncertain: readingBase.defenderUncertain,
+        agg,
+        heat,
+        confidence: conf.value,
+        trendId,
+    });
+    const gear = gearAdvice({
+        score: readingBase.score,
+        confidence: conf.value,
+        heat,
+        agg,
+        defenderVerdict: readingBase.defenderVerdict,
+        trendId,
+        answers,
+    });
+    const band = conf.value >= 0.8 ? "5 à 8" : conf.value >= 0.55 ? "8 à 12" : "10 à 15";
+    const protocol = `Protocole expérimental : observe encore ${band} parties en ${formatLabel(answers).toLowerCase()} avant de réévaluer. Note qui inflige le premier dégât, qui commence le combat, et si tu n'as fait que riposter. Ce n'est pas un délai officiel de retour vers des lobbys calmes — Embark n'en publie pas, et décrit seulement un glissement graduel.`;
+    return { ...readingBase, synthesis, gear, protocol };
+}
+function discordReport(r) {
+    const lines = [
+        "RAIDER PSYCHO-PASS — profil général",
+        "Indicateur communautaire expérimental. Ce n'est pas le score interne d'Embark.",
+        "",
+        `Psycho-Pass : ${String(r.score).padStart(3, "0")} / 300`,
+        `Catégorie : ${r.category.name}`,
+    ];
+    if (r.defenderVerdict)
+        lines.push("Verdict : Raider en lobby PvE s'étant défendu");
+    else if (r.defenderUncertain)
+        lines.push("Verdict défensif : incertain (chronologie incomplète)");
+    lines.push(`Format évalué : ${r.formatLabel}`, `Confiance : ${r.confidenceLabel} (${r.confidence.toFixed(2).replace(".", ",")}) · fourchette de lecture ${r.low}–${r.high}`, `Parties observées : ${r.gamesLabel}`, "", `Initiation volontaire : ${r.initiation}/100`, `Pression hostile subie : ${r.pressure}/100`, `Posture défensive : ${r.defense == null ? "non établie" : `${r.defense}/100`}`, "", "Synthèse", r.synthesis, "", "Facteurs les plus contributifs");
+    if (r.factors.length === 0)
+        lines.push("• Aucun facteur notable : l'indice reste bas.");
+    else
+        for (const f of r.factors)
+            lines.push(`• ${f.label} (~${f.points} pts)`);
+    lines.push("", "Incertitudes");
+    for (const u of r.uncertainties)
+        lines.push(`• ${u}`);
+    lines.push("", "Hors calcul", ...r.ignored.map((i) => `• ${i}`), "", "Conseil d'équipement", r.gear, "", "Protocole", r.protocol);
+    return lines.join("\n");
+}
+const TRANSPARENCY = [
+    {
+        id: "facts",
+        title: "Confirmé par Embark",
+        items: [
+            "Le style de jeu est une échelle continue, pas deux lobbys « gentils » et « méchants ». La plupart des Raiders sont entre les deux. (Notes du 20 mai 2026.)",
+            "Le système rapproche plutôt des styles similaires, sans garantie. Il n'existe pas, dans ces notes, de lobby où personne ne pourra jamais t'attaquer. Topside reste risqué.",
+            "Un tir ou un kill isolé ne te bascule pas d'un coup. L'historique pèse sur la durée, et les patchs ne le remettent pas à zéro.",
+            "Le loadout, le sondage de fin de partie, le fait de looter un joueur au sol, le statut de chef et le crossplay ne sont pas présentés comme le levier du ton PvP. Le crossplay change le vivier, pas une promesse de calme.",
+            "Depuis le 20 mai 2026, se défendre n'est plus traité comme démarrer un combat. Les rounds très pauvres en décisions pèsent moins.",
+            "Depuis la 1.36.0 (7 juillet 2026), solo, duo et trio ont des historiques séparés.",
+            "Le test 1.39.0 (28 juillet 2026) allait plus loin : seuls les combats que tu choisis de commencer devaient compter, défense incluse à zéro — y compris le KO de celui qui a frappé en premier. L'escouade qui pose le premier dégât, down ou KO est lue comme l'initiatrice. Le third-party compte. Un échange long pèse plus qu'un tir accidentel, qui compte encore un peu. Embark présentait cela comme un test.",
+            "Un toggle PvE a été testé du 13 au 20 octobre 2026, avec zéro dégât joueur sur ces serveurs, et sans modifier le rating PvPvE. Le studio prévoyait de retirer le toggle à la fin du test. Aucun résultat officiel post-test n'est codé ici.",
+        ],
+    },
+    {
+        id: "community",
+        title: "Observations communautaires",
+        items: [
+            "Les joueurs décrivent des séries plus calmes ou plus chaudes, des third-parties, des attaques à l'ascenseur, des pièges. Ce sont des récits de raid, pas une télémétrie.",
+            "La distribution « environ un tiers plutôt PvP » citée dans la presse au moment du projet de toggle est un portrait de population, pas un score personnel. Elle n'entre pas dans la formule.",
+        ],
+    },
+    {
+        id: "model",
+        title: "Hypothèses de ce modèle",
+        items: [
+            "Trois lectures séparées : initiation volontaire, pression subie, posture défensive.",
+            "L'initiation peut porter toute l'échelle jusqu'à 300. La pression ajoute jusqu'à 120 points, et seulement dans la part du score qui n'est pas déjà de l'initiation.",
+            "Le pic du geste le plus offensif compte autant que la moyenne, pour qu'un comportement clair ne soit pas noyé.",
+            "L'intensité amplifie l'initiation (coefficient 0,28), pas la défense.",
+            "La confiance dépend du nombre de parties, de la netteté des souvenirs, de la pureté du format et des « je ne sais pas ». Elle élargit la fourchette. Elle ne tire pas le score vers le milieu.",
+            "Aucun bonus micro, émote ou extraction pacifique. Aucun malus de loadout.",
+        ],
+    },
+    {
+        id: "play",
+        title: "Choix ludiques",
+        items: [
+            "L'échelle 0–300, les noms de catégories et le mot Psycho-Pass sont un hommage à la série, pas un système Sibyl et pas un outil Embark.",
+            "Le 300 est un sommet symbolique : le profil le plus orienté PvP que tes réponses permettent de décrire.",
+        ],
+    },
+];
+const SOURCES = [
+    {
+        label: "Notes on the Matchmaking System — Embark, 20 mai 2026",
+        href: "https://arcraiders.com/news/notes-on-the-matchmaking-system",
+    },
+    {
+        label: "Test du toggle PvE — Embark, 24 septembre 2026",
+        href: "https://arcraiders.com/news/pve-toggle-beta-test",
+    },
+    {
+        label: "Règles du test PvE — Embark, 12 octobre 2026",
+        href: "https://arcraiders.com/news/pve-toggle-what-to-know",
+    },
+    {
+        label: "Live Update 1.39.0 — centre d'aide Embark",
+        href: "https://id.embark.games/arc-raiders/support/faq/269-live-update-1-39-0",
+    },
+];
+
+/* Interface du fichier autonome. Le modèle est concaténé au-dessus de ce script. */
+const STORAGE_KEY = "raider-psycho-pass-general-v1";
+const app = document.querySelector("#app");
+
+let screen = "home";
+let answers = {};
+let cursorId = "format";
+let soon = false;
+let copyState = "idle";
+let fallback = "";
+
+function esc(value) {
+  return String(value).replace(/[&<>"']/g, (ch) => ({ "&": "&", "<": "<", ">": ">", '"': """, "'": "&#39;" }[ch]));
+}
+
+function load() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return;
+    const saved = JSON.parse(raw);
+    if (saved.answers && typeof saved.answers === "object") answers = saved.answers;
+    if (saved.screen === "home" || saved.screen === "quiz" || saved.screen === "report") screen = saved.screen;
+    if (typeof saved.cursorId === "string") cursorId = saved.cursorId;
+  } catch {
+    /* stockage illisible */
+  }
+}
+
+function save() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify({ screen, answers, cursorId }));
+}
+
+function tone(score) {
+  if (score >= 180) return "hot";
+  if (score >= 80) return "watch";
+  return "cyan";
+}
+
+function gauge(reading, compact) {
+  const score = reading.unlocked ? reading.score : null;
+  const pct = score == null ? 0 : (score / 300) * 100;
+  const klass = score == null ? "muted" : tone(score);
+  return `<div class="gauge ${compact ? "compact" : ""}">
+    <div class="gauge-top">
+      <div>
+        <p class="kicker">Psycho-Pass</p>
+        <p class="score ${klass}">${score == null ? "···" : String(score).padStart(3, "0")}</p>
+      </div>
+      ${compact ? "" : `<p class="gauge-side">${reading.provisional ? "Lecture provisoire" : "sur 300"}<span>${reading.unlocked ? esc(reading.category.name) : "En attente"}</span></p>`}
+    </div>
+    <div class="track" role="meter" aria-valuemin="0" aria-valuemax="300" aria-valuenow="${score ?? 0}" aria-label="Psycho-Pass sur 300">
+      <div class="fill ${klass}" style="width:${pct}%"></div>
+    </div>
+    ${compact ? "" : `<div class="scale"><span>0</span><span>300</span></div>`}
+  </div>`;
+}
+
+function axis(label, value, hint) {
+  const pct = value == null ? 0 : value;
+  return `<div class="card">
+    <div class="row"><p>${esc(label)}</p><p class="num">${value == null ? "—" : value}</p></div>
+    <div class="track thin"><div class="fill cyan" style="width:${pct}%"></div></div>
+    <p class="muted">${esc(hint)}</p>
+  </div>`;
+}
+
+function transparency() {
+  const blocks = TRANSPARENCY.map(
+    (block) => `<details class="card">
+      <summary>${esc(block.title)}</summary>
+      <ul>${block.items.map((item) => `<li>${esc(item)}</li>`).join("")}</ul>
+    </details>`,
+  ).join("");
+  const links = SOURCES.map(
+    (s) => `<li><a href="${esc(s.href)}" target="_blank" rel="noreferrer">${esc(s.label)}</a></li>`,
+  ).join("");
+  return `<section class="transparency">
+    <h2>Ce qui est su, supposé, ou seulement ludique</h2>
+    <div class="stack">${blocks}</div>
+    <ul class="links">${links}</ul>
+    <p class="muted small">Aucune donnée n'est envoyée. Les réponses restent dans ce navigateur. Fichier autonome, sans serveur.</p>
+  </section>`;
+}
+
+function home(reading) {
+  const hasDraft = Object.keys(answers).length > 0;
+  const mods = MODULES.map((mod) => {
+    if (mod.ready) {
+      return `<article class="card accent"><p class="kicker">${esc(mod.index)}</p><h2>${esc(mod.title)}</h2><p class="muted">${esc(mod.text)}</p></article>`;
+    }
+    return `<article class="card"><p class="kicker">${esc(mod.index)}</p><h2>Dernière partie</h2><p class="muted">${esc(mod.text)}</p>
+      <button type="button" data-act="soon">${soon ? "Fermer" : "Voir ce que le module couvrira"}</button></article>`;
+  }).join("");
+  return `<p class="kicker">MODULE 01 · PROFIL GÉNÉRAL</p>
+    <h1>RAIDER PSYCHO-PASS</h1>
+    <p class="lead">Calcule le Psycho-Pass de ton Raider en temps réel.</p>
+    <p class="muted">Un indicateur sur 300 pour estimer, d'après tes parties, si tu peux sortir avec ton équipement habituel, s'il vaut mieux rester prudent, ou si tu traverses une série plus agressive. Utile aussi quand tu t'es surtout défendu.</p>
+    <p class="notice">Le matchmaking d'ARC Raiders n'est pas public dans le détail. Ce terminal ne prétend pas connaître le score interne d'Embark. C'est un outil communautaire expérimental.</p>
+    <div class="split">${mods}</div>
+    ${soon ? `<p class="notice">Le second module reprendra la même échelle sur un seul raid : premier tir, premier dégât, third-party, fuite, poursuite, ascenseur. L'identifiant last-raid est déjà réservé.</p>` : ""}
+    <ol class="steps">
+      <li><p class="kicker">01</p><p class="strong">Un format</p><p class="muted">Solo, duo ou trio. Les trois historiques ne se compensent pas.</p></li>
+      <li><p class="kicker">02</p><p class="strong">Tes souvenirs</p><p class="muted">Rencontres, qui commence, qui encaisse, comment ça se termine.</p></li>
+      <li><p class="kicker">03</p><p class="strong">Une lecture</p><p class="muted">Score, confiance, pression subie, et un conseil d'équipement partageable.</p></li>
+    </ol>
+    <div class="actions">
+      <button type="button" class="primary" data-act="start">${hasDraft ? "Reprendre au début des questions" : "Commencer le questionnaire"}</button>
+      ${hasDraft ? `<button type="button" data-act="resume">Continuer là où j'en étais</button>` : ""}
+      ${hasDraft ? `<button type="button" class="ghost" data-act="restart">Effacer</button>` : ""}
+    </div>
+    ${transparency()}`;
+}
+
+function quiz(visible, reading) {
+  const current = visible.find((q) => q.id === cursorId) ?? visible[0];
+  const index = Math.max(0, visible.findIndex((q) => q.id === current.id));
+  const section = SECTIONS.find((s) => s.id === current.sectionId);
+  const nav = SECTIONS.map((s) => {
+    const qs = visible.filter((q) => q.sectionId === s.id);
+    if (!qs.length) return "";
+    const done = qs.every((q) => answers[q.id]);
+    const active = current.sectionId === s.id;
+    return `<li><button type="button" class="${active ? "on" : ""}" data-act="jump" data-section="${esc(s.id)}"><span class="kicker">${esc(s.index)}</span> ${esc(s.title)}${done ? " ✓" : ""}</button></li>`;
+  }).join("");
+  const options = current.options
+    .map((opt) => {
+      const selected = answers[current.id] === opt.id;
+      return `<button type="button" class="option ${selected ? "on" : ""}" data-act="pick" data-q="${esc(current.id)}" data-o="${esc(opt.id)}" aria-pressed="${selected}">
+        <span>${esc(opt.label)}</span>
+        ${opt.detail ? `<small>${esc(opt.detail)}</small>` : ""}
+      </button>`;
+    })
+    .join("");
+  return `<div class="layout"><ol class="nav">${nav}</ol><section>
+    <div class="row muted"><p><span class="kicker">${esc(section.index)}</span> ${esc(section.title)}</p><p>Question ${index + 1} / ${visible.length}</p></div>
+    <div class="track thin"><div class="fill cyan" style="width:${((index + 1) / visible.length) * 100}%"></div></div>
+    ${gauge(reading, false)}
+    <p class="muted">L'indice bouge avec tes réponses. Il ne lit pas les serveurs du jeu.</p>
+    <h1>${esc(current.prompt)}</h1>
+    ${current.note ? `<p class="muted">${esc(current.note)}</p>` : ""}
+    <div class="options">${options}</div>
+    <div class="actions">
+      <button type="button" data-act="back">${index === 0 ? "Accueil" : "Retour"}</button>
+      <button type="button" class="primary" data-act="next" ${answers[current.id] ? "" : "disabled"}>${index >= visible.length - 1 ? "Voir le rapport" : "Continuer"}</button>
+    </div>
+  </section></div>`;
+}
+
+function report(reading) {
+  const factors = reading.factors.length
+    ? `<ul class="factors">${reading.factors.map((f) => `<li><span>${esc(f.label)}</span><b>+${f.points}</b></li>`).join("")}</ul>`
+    : `<p class="muted">Aucun facteur fort. L'indice reste bas.</p>`;
+  const verdict = reading.defenderVerdict
+    ? `<p class="banner">Verdict contextuel : Raider en lobby PvE s'étant défendu. Il décrit ton comportement, pas une promesse de lobby calme.</p>`
+    : reading.defenderUncertain
+      ? `<p class="banner warn">Tu sembles avoir surtout subi, mais la chronologie est trop trouée pour le verdict défensif.</p>`
+      : "";
+  return `<p class="kicker">RAPPORT · ${esc(reading.formatLabel.toUpperCase())}</p>
+    <h1>${esc(reading.category.name)}</h1>
+    <p class="muted">${esc(reading.category.blurb)}</p>
+    ${verdict}
+    <div class="card">${gauge(reading, false)}
+      <p class="muted">Fourchette de lecture ${reading.low}–${reading.high}. Ce n'est pas une marge d'erreur Embark.</p>
+    </div>
+    <div class="axes">
+      ${axis("Initiation", reading.initiation, "Combats que tu choisis de commencer.")}
+      ${axis("Pression subie", reading.pressure, "Hostilité rencontrée, pas ton rôle.")}
+      ${axis("Posture défensive", reading.defense, "Hors du score d'initiation.")}
+    </div>
+    <h2>Synthèse</h2>
+    <p>${esc(reading.synthesis)}</p>
+    <div class="split">
+      <div class="card"><p class="kicker">Confiance</p><p class="num">${esc(reading.confidenceLabel)}</p><p class="muted">${esc(reading.gamesLabel)} · ${esc(reading.formatLabel)}</p></div>
+      <div class="card"><p class="kicker">Ce qui pèse le plus</p>${factors}</div>
+    </div>
+    <div class="card advice"><h2>Conseil pour le prochain raid</h2><p>${esc(reading.gear)}</p></div>
+    <div class="card"><h2>Protocole d'observation</h2><p class="muted">${esc(reading.protocol)}</p></div>
+    <h2>Incertitudes</h2>
+    <ul>${reading.uncertainties.map((u) => `<li>${esc(u)}</li>`).join("")}</ul>
+    <h2>Hors calcul</h2>
+    <ul>${reading.ignored.map((u) => `<li>${esc(u)}</li>`).join("")}</ul>
+    <div class="actions">
+      <button type="button" class="primary" data-act="copy">${copyState === "ok" ? "Rapport copié" : "Copier pour Discord"}</button>
+      <button type="button" data-act="edit">Modifier les réponses</button>
+      <button type="button" data-act="restart">Recommencer</button>
+    </div>
+    ${copyState === "fallback" ? `<p class="warn-text">La copie automatique est bloquée. Sélectionne le texte ci-dessous.</p><textarea id="fallback" readonly>${esc(fallback)}</textarea>` : ""}
+    ${transparency()}`;
+}
+
+function render() {
+  const visible = visibleQuestions(answers);
+  const reading = evaluate(answers);
+  if (screen === "report" && !reading.complete) screen = "quiz";
+  if (screen === "quiz" && !visible.some((q) => q.id === cursorId) && visible[0]) cursorId = visible[0].id;
+  const body = screen === "quiz" ? quiz(visible, reading) : screen === "report" ? report(reading) : home(reading);
+  const showGauge = screen !== "home" && reading.unlocked;
+  app.innerHTML = `<header><div class="bar">
+      <button type="button" data-act="home" class="brand"><span class="kicker">RAIDER PSYCHO-PASS</span><small>Terminal d'analyse · pas un score Embark</small></button>
+      ${showGauge ? gauge(reading, true) : ""}
+    </div></header><main>${body}</main>`;
+}
+
+app.addEventListener("click", (event) => {
+  const el = event.target.closest("[data-act]");
+  if (!el) return;
+  const act = el.dataset.act;
+  const visible = visibleQuestions(answers);
+  const current = visible.find((q) => q.id === cursorId) ?? visible[0];
+  const index = Math.max(0, visible.findIndex((q) => q.id === current?.id));
+  if (act === "home") screen = "home";
+  if (act === "soon") soon = !soon;
+  if (act === "start") {
+    cursorId = visible[0]?.id ?? "format";
+    screen = "quiz";
+  }
+  if (act === "resume") screen = evaluate(answers).complete ? "report" : "quiz";
+  if (act === "restart") {
+    answers = {};
+    cursorId = "format";
+    screen = "home";
+    soon = false;
+    copyState = "idle";
+    fallback = "";
+    localStorage.removeItem(STORAGE_KEY);
+  }
+  if (act === "pick") answers = { ...answers, [el.dataset.q]: el.dataset.o };
+  if (act === "back") {
+    if (index <= 0) screen = "home";
+    else cursorId = visible[index - 1].id;
+  }
+  if (act === "next" && current && answers[current.id]) {
+    if (index >= visible.length - 1) screen = "report";
+    else cursorId = visible[index + 1].id;
+  }
+  if (act === "edit") {
+    cursorId = visible[0]?.id ?? "format";
+    screen = "quiz";
+  }
+  if (act === "jump") {
+    const qs = visible.filter((q) => q.sectionId === el.dataset.section);
+    const firstMissing = visible.find((q) => !answers[q.id]);
+    const target = qs.find((q) => !answers[q.id]) ?? qs[0];
+    if (target) {
+      const targetIndex = visible.findIndex((q) => q.id === target.id);
+      const frontier = firstMissing ? visible.findIndex((q) => q.id === firstMissing.id) : visible.length;
+      cursorId = targetIndex > frontier ? firstMissing.id : target.id;
+      screen = "quiz";
+    }
+  }
+  if (act === "copy") {
+    const text = discordReport(evaluate(answers));
+    const done = (ok) => {
+      copyState = ok ? "ok" : "fallback";
+      fallback = ok ? "" : text;
+      save();
+      render();
+      if (!ok) document.querySelector("#fallback")?.select();
+    };
+    if (!navigator.clipboard?.writeText) done(false);
+    else navigator.clipboard.writeText(text).then(() => done(true)).catch(() => done(false));
+    return;
+  }
+  save();
+  render();
+  document.getElementById("top")?.scrollIntoView({ block: "start" });
+});
+
+load();
+if (screen === "report" && !evaluate(answers).complete) screen = "quiz";
+render();
+
+  <\/script>
+</body>
+</html>

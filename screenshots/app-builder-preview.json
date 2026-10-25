@@ -1,0 +1,36 @@
+{
+  "url": "http://127.0.0.1:8080/",
+  "viewports": {
+    "desktop": {
+      "width": 1280,
+      "height": 800,
+      "status": 200,
+      "title": "RAIDER PSYCHO-PASS",
+      "hasCanvas": false,
+      "bodyTextLen": 1499,
+      "bodyTextHash": "870a64d3ca761fa1e70f859af9644d7e705791d529df89b5fc42aef3fb6075a8",
+      "bodyTextPrefix": "RAIDER PSYCHO-PASS Terminal d'analyse · pas un score Embark MODU",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/app-builder-preview.png"
+    },
+    "mobile": {
+      "width": 390,
+      "height": 844,
+      "status": 200,
+      "title": "RAIDER PSYCHO-PASS",
+      "hasCanvas": false,
+      "bodyTextLen": 1499,
+      "bodyTextHash": "870a64d3ca761fa1e70f859af9644d7e705791d529df89b5fc42aef3fb6075a8",
+      "bodyTextPrefix": "RAIDER PSYCHO-PASS Terminal d'analyse · pas un score Embark MODU",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/app-builder-preview-mobile.png"
+    }
+  },
+  "brandWarnings": [],
+  "authWarnings": [],
+  "verdictFile": "/workspace/screenshots/app-builder-preview.json"
+}
